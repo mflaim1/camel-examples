@@ -9,12 +9,6 @@
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-  <!-- This creates an embedded ActiveMQ Broker -->
-  <broker xmlns="http://activemq.apache.org/schema/core" useJmx="true" persistent="false">
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616" />
-    </transportConnectors>
-  </broker>
 
   <!-- Lets connect the Camel ActiveMQ component to the embedded broker.
        See http://camel.apache.org/activemq.html for more information.
@@ -31,20 +25,21 @@
   -->
   <camelContext xmlns="http://camel.apache.org/schema/spring">
     <route>
-      <from uri="file:src/data?noop=true"/>
-      <to uri="activemq:personnel.records"/>
+      <from uri="activemq:in"/>
+	      <setHeader headerName="messageType">
+	    	<simple>${body}</simple>
+		   </setHeader>
+	      <log id="_logFile" message="Routing message with body: ${body} and header: ${header.messageType}"/>
+	      
+      <toD uri="activemq:${header.messageType}"/>
     </route>
-    <route>
-      <from uri="activemq:personnel.records"/>
-      <choice>
-        <when>
-          <xpath>/person/city = 'London'</xpath>
-          <to uri="file:target/messages/uk"/>
-        </when>
-        <otherwise>
-          <to uri="file:target/messages/others"/>
-        </otherwise>
-      </choice>
+   <route>
+      <from uri="activemq:message1"/>
+      <to uri="activemq:out.message1"/>
+    </route>
+     <route>
+      <from uri="activemq:message2"/>
+      <to uri="activemq:out.message2"/>
     </route>
   </camelContext>
 
